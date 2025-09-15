@@ -1,41 +1,44 @@
 {
   "name": "bot-daatcs-railway",
-  "version": "1.0.0",
-  "description": "Bot WhatsApp DAATCS - GitHub + Railway + Termux compatible",
+  "version": "2.0.0",
+  "description": "Bot de WhatsApp para gestión de pedidos DAATCS - Optimizado para Railway y Termux",
   "main": "bot.js",
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "scripts": {
     "start": "node bot.js",
-    "dev": "node bot.js",
-    "termux": "node bot.js",
-    "railway": "node bot.js"
-  },
-  "dependencies": {
-    "whatsapp-web.js": "^1.23.0",
-    "qrcode-terminal": "^0.12.0",
-    "express": "^4.18.2"
-  },
-  "optionalDependencies": {
-    "puppeteer": "^21.5.0"
+    "dev": "nodemon bot.js",
+    "qr": "node -e \"process.env.FORCE_QR='true'; require('./bot.js')\"",
+    "reset": "rm -rf auth_data && rm -rf database/pedidos.json && npm start",
+    "backup": "cp database/pedidos.json database/backup-$(date +%Y%m%d-%H%M%S).json",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
     "whatsapp",
     "bot",
+    "pedidos",
     "railway",
     "termux",
-    "nodejs",
     "daatcs"
   ],
-  "author": "DAATCS",
+  "author": "JR23CR",
   "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.23.0",
+    "qrcode-terminal": "^0.12.0",
+    "express": "^4.18.2",
+    "puppeteer": "^21.5.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tu-usuario/bot-daatcs-railway.git"
+    "url": "https://github.com/JR23CR/bot-daatcs-railway.git"
   },
   "bugs": {
-    "url": "https://github.com/tu-usuario/bot-daatcs-railway/issues"
+    "url": "https://github.com/JR23CR/bot-daatcs-railway/issues"
   },
-  "homepage": "https://github.com/tu-usuario/bot-daatcs-railway#readme"
+  "homepage": "https://github.com/JR23CR/bot-daatcs-railway#readme"
 }
