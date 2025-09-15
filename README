@@ -1,194 +1,279 @@
-# Bot DAATCS - Railway Edition 🚀
+# Bot DAATCS - Sistema de Gestión de Pedidos 🤖
 
-Bot de WhatsApp optimizado para Railway con protecciones anti-baneo integradas.
+Bot de WhatsApp optimizado para gestionar pedidos, compatible con **Railway** (nube) y **Termux** (local).
 
 ## 🌟 Características
 
-- ✅ **Optimizado para Railway** - Configuración específica para la nube
-- ✅ **Servidor Express integrado** - Health checks y endpoints útiles
-- ✅ **Protecciones anti-baneo** - Delays y límites inteligentes
-- ✅ **Heartbeat automático** - Evita que Railway suspenda el servicio
-- ✅ **Gestión de memoria optimizada** - Para contenedores limitados
-- ✅ **QR Code vía web** - Accesible desde el navegador
-- ✅ **Logs optimizados** - Para Railway Dashboard
+- ✅ **Dual Environment**: Funciona en Railway y Termux
+- ✅ **QR en Terminal**: Para Termux con `qrcode-terminal`
+- ✅ **Sistema de Pedidos**: Gestión completa de órdenes
+- ✅ **Base de Datos JSON**: Sin dependencias externas
+- ✅ **Estados Personalizables**: Workflow completo de pedidos
+- ✅ **Notificaciones Automáticas**: Al cliente y administradores
+- ✅ **Protecciones Anti-Ban**: Límites y delays inteligentes
+- ✅ **Backup Automático**: Base de datos protegida
 
-## 🚀 Desplegar en Railway
+## 🚀 Instalación Rápida - Termux
 
-### Método 1: Desde GitHub (Recomendado)
-
-1. **Fork este repositorio** en tu GitHub
-2. **Ve a [Railway.app](https://railway.app)** y conecta tu GitHub
-3. **Crea un nuevo proyecto** → "Deploy from GitHub repo"
-4. **Selecciona tu fork** del bot
-5. **Railway detectará automáticamente** la configuración
-6. **Espera el despliegue** (2-3 minutos)
-
-### Método 2: Railway CLI
-
+### Método Automático (Recomendado):
 ```bash
-# Instalar Railway CLI
-npm install -g @railway/cli
-
-# Login
-railway login
-
-# Inicializar proyecto
-railway init
-railway link
-
-# Desplegar
-railway up
+# Descargar e ejecutar instalador
+wget -O - https://raw.githubusercontent.com/JR23CR/bot-daatcs-railway/main/install-termux.sh | bash
 ```
 
-### Método 3: Subida directa
+### Método Manual:
+```bash
+# 1. Preparar Termux
+termux-setup-storage
+apt update && apt upgrade -y
+pkg install -y nodejs npm git python chromium
 
-1. Sube todos los archivos a Railway
-2. Railway detectará el `package.json` automáticamente
-3. Se iniciará el build y despliegue
+# 2. Clonar repositorio
+cd ~
+git clone https://github.com/JR23CR/bot-daatcs-railway.git bot-daatcs
+cd bot-daatcs
 
-## 📁 Estructura de archivos necesarios
+# 3. Instalar dependencias
+npm install
 
+# 4. Iniciar bot
+npm start
 ```
-bot-daatcs-railway/
-├── bot.js                 # Bot principal (optimizado para Railway)
-├── package.json           # Dependencias
-├── railway.toml           # Configuración Railway
-├── nixpacks.toml          # Build configuration
-├── Dockerfile             # Alternativo (opcional)
-└── README.md             # Esta guía
-```
 
-## 🔧 Configuración en Railway
-
-### Variables de entorno (automáticas):
-- `PORT` - Puerto del servidor (Railway lo asigna)
-- `RAILWAY_STATIC_URL` - URL pública del bot
-- `NODE_ENV=production` - Modo producción
-
-### URLs importantes:
-- **Bot status:** `https://tu-bot.railway.app/`
-- **Código QR:** `https://tu-bot.railway.app/qr`
-- **Estadísticas:** `https://tu-bot.railway.app/stats`
-
-## 📱 Configurar WhatsApp
+## 📱 Uso del Bot
 
 ### 1. Obtener código QR:
-```bash
-# Opción 1: Ver logs en Railway Dashboard
-# Opción 2: Visitar https://tu-bot.railway.app/qr
-# Opción 3: Railway CLI
-railway logs
+Al ejecutar `npm start`, el QR aparece **directamente en la terminal** de Termux:
+
+```
+==================================================
+📱 CÓDIGO QR PARA WHATSAPP BUSINESS
+==================================================
+
+█████████████████████████████████████████
+█████████████████████████████████████████
+████ ▄▄▄▄▄ █▀█ █▄▀▄▄▀▄ ▄▄▄▄▄ ████
+████ █   █ █▀▀▀█ ▀ ▀█▀▀█   █ ████
+████ █▄▄▄█ █▀ █▀▀▄██▀▄██▄▄▄█ ████
+[... QR CODE ...]
+
+✅ QR generado correctamente
+📲 Abre WhatsApp Business > Dispositivos vinculados
+==================================================
 ```
 
 ### 2. Escanear con WhatsApp Business:
-- Abre **WhatsApp Business** (no normal)
+- Abre **WhatsApp Business** (no WhatsApp normal)
 - Ve a **Configuración** → **Dispositivos vinculados**
-- **Escanea** el código QR
-- Espera confirmación de conexión
+- Toca **"Vincular dispositivo"**
+- Escanea el código QR
 
 ### 3. Crear grupo:
-- Crea un grupo llamado **"PEDIDOS DAATCS"**
-- Agrega los usuarios necesarios
+- Crea un grupo llamado que contenga **"PEDIDOS"** y **"DAATCS"**
+- Ejemplo: "PEDIDOS DAATCS", "Grupo Pedidos DAATCS", etc.
 - El bot se conectará automáticamente
 
 ## 🤖 Comandos del Bot
 
-Una vez conectado en tu grupo:
+### Para Clientes:
+```bash
+/nuevo [descripción]     # Crear nuevo pedido
+/info [ID]              # Ver detalles de pedido
+/lista                  # Ver pedidos activos
+/ayuda                  # Ver todos los comandos
+```
 
-### Comandos principales:
-- `/ayuda` - Ver todos los comandos
-- `/lista` - Pedidos activos
-- `/stats` - Estadísticas completas
-- `/estado [ID] [nuevo_estado]` - Cambiar estado pedido
-- `/salud` - Estado del bot
-- `/railway` - Info del servidor
+### Para Administradores:
+```bash
+/estado [ID] [estado]   # Cambiar estado de pedido
+/stats                  # Ver estadísticas completas
+/salud                  # Estado del bot
+```
 
-### Estados disponibles:
-- `pendiente`, `confirmado`, `proceso`, `diseño`
-- `produccion`, `control`, `listo`, `entregado`
-- `cancelado`, `pausado`
+### Estados Disponibles:
+- `pendiente`, `confirmado`, `proceso`
+- `diseño`, `produccion`, `control`
+- `listo`, `entregado`, `cancelado`
 
-## 🛡️ Protecciones Anti-Baneo
+## 💡 Ejemplos de Uso
 
-### Configuración optimizada:
-- **Límite:** 15 mensajes/hora (reducido para Railway)
-- **Delays:** 3-7 segundos entre mensajes
-- **Horario:** 6:00 AM - 10:00 PM
-- **Heartbeat:** Cada 25 minutos
-- **Memoria:** Optimizada para contenedores
+```bash
+# Cliente crea pedido
+/nuevo Camiseta talla M color azul con logo personalizado
+
+# Bot responde con ID
+✅ PEDIDO CREADO EXITOSAMENTE
+🆔 ID: #001
+👤 Cliente: Juan Pérez
+📊 Estado: PENDIENTE
+
+# Admin cambia estado
+/estado 001 confirmado
+
+# Cliente consulta estado
+/info 001
+```
+
+## 🔧 Scripts Útiles para Termux
+
+Después de la instalación automática, tendrás estos scripts:
+
+```bash
+# Iniciar bot normal
+./start-bot.sh
+
+# Iniciar con PM2 (24/7)
+./start-pm2.sh
+
+# Regenerar QR si hay problemas
+./regenerate-qr.sh
+
+# Hacer backup
+./backup-data.sh
+```
 
 ## 📊 Monitoreo
 
-### Health Check:
+### URLs disponibles (cuando el bot esté activo):
+- **Estado general**: `http://localhost:3000`
+- **Código QR**: `http://localhost:3000/qr`
+- **Estadísticas**: `http://localhost:3000/stats`
+
+### Comandos PM2:
 ```bash
-curl https://tu-bot.railway.app/
+pm2 logs daatcs-bot      # Ver logs en tiempo real
+pm2 stop daatcs-bot      # Detener bot
+pm2 start daatcs-bot     # Iniciar bot
+pm2 restart daatcs-bot   # Reiniciar bot
 ```
 
-### Ver estadísticas:
-```bash
-curl https://tu-bot.railway.app/stats
-```
-
-### Logs en tiempo real:
-```bash
-railway logs --follow
-```
-
-## 🔧 Solución de problemas
-
-### Bot no se conecta:
-1. Verifica los logs: `railway logs`
-2. Revisa el status: visita `https://tu-bot.railway.app/`
-3. Si es necesario, redeploy: `railway up --detach`
-
-### Error de memoria:
-Railway automáticamente reiniciará el bot si usa mucha memoria.
+## 🛠️ Solución de Problemas
 
 ### QR no aparece:
-1. Visita: `https://tu-bot.railway.app/qr`
-2. O verifica logs: `railway logs`
-3. El QR se regenera automáticamente
+```bash
+# Método 1: Regenerar sesión
+cd ~/bot-daatcs
+./regenerate-qr.sh
+
+# Método 2: Limpiar cache
+rm -rf auth_data
+npm start
+
+# Método 3: Reinstalar dependencias
+npm install --force
+```
+
+### Bot se desconecta:
+```bash
+# Verificar logs
+pm2 logs daatcs-bot
+
+# Reiniciar bot
+pm2 restart daatcs-bot
+
+# Si persiste el problema
+./regenerate-qr.sh
+```
+
+### Error de memoria en Termux:
+```bash
+# Limpiar cache
+npm cache clean --force
+
+# Reiniciar Termux
+exit
+# Reabrir Termux y ejecutar:
+cd ~/bot-daatcs && ./start-bot.sh
+```
 
 ### Grupo no encontrado:
-1. Asegúrate que el grupo se llame exactamente **"PEDIDOS DAATCS"**
+1. Verifica que el grupo contenga "PEDIDOS" y "DAATCS" en el nombre
 2. Usa **WhatsApp Business**, no WhatsApp normal
-3. Verifica logs para ver grupos disponibles
+3. Revisa logs: `pm2 logs daatcs-bot`
 
-## 💰 Costos de Railway
+## 🌐 Despliegue en Railway
 
-- **Plan Hobby:** $5/mes - Perfecto para este bot
-- **Recursos incluidos:** Suficientes para WhatsApp Bot
-- **Sleep mode:** El bot tiene heartbeat para evitarlo
+### Para Railway, usa el método original:
+1. Fork este repositorio
+2. Ve a [Railway.app](https://railway.app)
+3. Conecta tu GitHub
+4. Deploy desde tu fork
+5. Railway detectará automáticamente la configuración
 
-## 🔄 Actualizar el bot
+## 📁 Estructura de Archivos
 
-### Desde GitHub:
-1. Haz push a tu repositorio
-2. Railway detectará cambios automáticamente
-3. Se redespliegará automáticamente
-
-### Desde CLI:
-```bash
-railway up
 ```
+bot-daatcs/
+├── bot.js                 # Bot principal (dual environment)
+├── package.json           # Dependencias
+├── install-termux.sh      # Instalador para Termux
+├── start-bot.sh          # Script de inicio
+├── start-pm2.sh          # Script PM2
+├── regenerate-qr.sh      # Regenerar QR
+├── backup-data.sh        # Backup de datos
+├── database/
+│   ├── pedidos.json      # Base de datos principal
+│   └── backup-*.json     # Backups automáticos
+├── auth_data/            # Sesión de WhatsApp
+└── README.md             # Esta guía
+```
+
+## 🔒 Características de Seguridad
+
+- **Límites de mensajes**: Protección anti-ban
+- **Horarios de servicio**: 6:00 AM - 10:00 PM
+- **Delays inteligentes**: Entre mensajes
+- **Backup automático**: Cada 6 horas
+- **Validación de permisos**: Admin vs usuarios
+- **Logs detallados**: Para debugging
+
+## 📈 Estadísticas y Monitoreo
+
+El bot registra automáticamente:
+- Mensajes procesados
+- Comandos ejecutados
+- Pedidos por estado
+- Errores y rendimiento
+- Tiempo de actividad
+
+## 🤝 Contribuir
+
+1. Fork el repositorio
+2. Crea una rama para tu feature
+3. Commit tus cambios
+4. Push a la rama
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+MIT License - Ver archivo LICENSE para más detalles.
 
 ## 📞 Soporte
 
 Si tienes problemas:
 
-1. **Revisa los logs** en Railway Dashboard
-2. **Verifica el status** en `https://tu-bot.railway.app/`
-3. **Consulta la documentación** de Railway
-4. **Revisa que WhatsApp Business** esté funcionando
-
-## 🎯 Próximos pasos
-
-1. **Despliega** en Railway siguiendo esta guía
-2. **Escanea el QR** con WhatsApp Business  
-3. **Crea el grupo** "PEDIDOS DAATCS"
-4. **Prueba los comandos** (`/ayuda`, `/stats`)
-5. **¡Disfruta tu bot 24/7 en la nube!** ☁️
+1. **Revisa los logs**: `pm2 logs daatcs-bot`
+2. **Verifica el estado**: `http://localhost:3000`
+3. **Regenera QR**: `./regenerate-qr.sh`
+4. **Consulta Issues**: [GitHub Issues](https://github.com/JR23CR/bot-daatcs-railway/issues)
 
 ---
 
-**¡Bot DAATCS listo para Railway! 🚀**
+## ✅ Lista de Verificación
+
+Después de instalar, verifica:
+
+- [ ] ✅ Termux configurado con storage
+- [ ] ✅ Node.js y dependencias instaladas
+- [ ] ✅ Bot clonado en `~/bot-daatcs`
+- [ ] ✅ QR visible en terminal
+- [ ] ✅ WhatsApp Business conectado
+- [ ] ✅ Grupo creado con nombre correcto
+- [ ] ✅ Comandos funcionando (`/ayuda`)
+- [ ] ✅ PM2 configurado para 24/7
+
+**¡Tu sistema de pedidos DAATCS está listo! 🚀**
+
+---
+
+🏭 **DAATCS - Sistema Profesional de Gestión de Pedidos**
