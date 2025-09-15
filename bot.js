@@ -10,13 +10,13 @@ const path = require('path');
 
 const config = {
     // Configuración de Railway vs Termux
-    isRailway: process.env.RAILWAY_ENVIRONMENT === 'production',
+    isRailway: process.env.RAILWAY_ENVIRONMENT === 'production' || process.env.NODE_ENV === 'production',
     port: process.env.PORT || 3000,
     
     // Configuración del bot
     groupName: 'PEDIDOS DAATCS',
-    maxMessages: process.env.NODE_ENV === 'production' ? 15 : 30, // Menos en Railway
-    messageDelay: process.env.NODE_ENV === 'production' ? 5000 : 2000, // Más delay en Railway
+    maxMessages: process.env.NODE_ENV === 'production' ? 15 : 30,
+    messageDelay: process.env.NODE_ENV === 'production' ? 5000 : 2000,
     
     // Horarios de funcionamiento
     workingHours: {
@@ -180,8 +180,7 @@ async function initializeBot() {
         // Configurar cliente
         client = new Client({
             authStrategy: new LocalAuth({
-                clientId: 'bot-daatcs',
-                dataPath: './auth_data'
+                clientId: 'bot-daatcs'
             }),
             puppeteer: {
                 headless: true,
@@ -197,14 +196,8 @@ async function initializeBot() {
                     '--disable-extensions',
                     '--disable-background-timer-throttling',
                     '--disable-backgrounding-occluded-windows',
-                    '--disable-renderer-backgrounding',
-                    '--override-plugin-power-saver-for-testing=never',
-                    '--disable-features=TranslateUI,BlinkGenPropertyTrees'
+                    '--disable-renderer-backgrounding'
                 ]
-            },
-            webVersionCache: {
-                type: 'remote',
-                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
             }
         });
 
@@ -232,28 +225,19 @@ async function initializeBot() {
 
 function setupClientEvents() {
     
-    // Evento QR - CRÍTICO PARA TERMUX
+    // Evento QR
     client.on('qr', (qr) => {
         console.log('\n' + '='.repeat(50));
         console.log('📱 CÓDIGO QR PARA WHATSAPP BUSINESS');
         console.log('='.repeat(50));
         
-        // MOSTRAR QR EN TERMINAL (Para Termux)
+        // MOSTRAR QR EN TERMINAL
         qrcode.generate(qr, { small: true });
         
         console.log('='.repeat(50));
         console.log('✅ QR generado correctamente');
-        console.log('');
-        console.log('📲 INSTRUCCIONES:');
-        console.log('1. Abre WhatsApp Business (NO WhatsApp normal)');
-        console.log('2. Ve a Configuración → Dispositivos vinculados');
-        console.log('3. Toca "Vincular dispositivo"');
-        console.log('4. Escanea el código QR de arriba');
-        console.log('');
-        console.log('⏰ El código expira en 20 segundos');
-        if (!config.isRailway) {
-            console.log(`🌐 También disponible en: http://localhost:${config.port}/qr`);
-        }
+        console.log('📲 Escanea con WhatsApp Business');
+        console.log(`🌐 También disponible en: http://localhost:${config.port}/qr`);
         console.log('='.repeat(50) + '\n');
         
         // Guardar QR para web
@@ -477,182 +461,7 @@ async function showActiveOrders(chat) {
         return;
     }
     
-    let statsText = `📊 *ESTADÍSTICAS DAATCS*
-
-⏰ *Tiempo activo:* ${hours}h ${minutes}m
-📩 *Mensajes recibidos:* ${stats.messagesReceived}
-📤 *Mensajes enviados:* ${stats.messagesSent}
-🔧 *Comandos ejecutados:* ${stats.commandsExecuted}
-❌ *Errores:* ${stats.errors}
-🕐 *Última actividad:* ${formatDate(stats.lastActivity.toISOString())}
-
-📋 *PEDIDOS:*
-• Total: ${pedidosDB.pedidos.length}
-• Activos: ${pedidosDB.pedidos.filter(p => !['entregado', 'cancelado'].includes(p.estado)).length}
-• Entregados: ${estadisticas.entregado || 0}
-• Cancelados: ${estadisticas.cancelado || 0}
-
-📊 *POR ESTADO:*`;
-
-    Object.entries(estadisticas).forEach(([estado, cantidad]) => {
-        const emoji = getStatusEmoji(estado);
-        statsText += `\n• ${emoji} ${estado}: ${cantidad}`;
-    });
-
-    statsText += `\n\n💻 *Sistema:* ${config.isRailway ? 'Railway (Nube)' : 'Termux (Local)'}
-🔋 *Estado:* ${botStatus}
-📈 *Límite/hora:* ${messageCount}/${config.maxMessages}
-
-✅ Bot funcionando correctamente`;
-
-    await sendMessage(chat, statsText);
-}
-
-async function showBotHealth(chat) {
-    const uptime = Math.floor((Date.now() - stats.startTime.getTime()) / 1000);
-    const hours = Math.floor(uptime / 3600);
-    const minutes = Math.floor((uptime % 3600) / 60);
-    
-    const healthText = `🏥 *ESTADO DE SALUD DEL BOT*
-
-✅ *Estado general:* ${botStatus}
-⏰ *Tiempo activo:* ${hours}h ${minutes}m
-💻 *Entorno:* ${config.isRailway ? 'Railway (Nube)' : 'Termux (Local)'}
-📊 *Rendimiento:* ${stats.errors === 0 ? 'Óptimo' : 'Con errores'}
-🔋 *Memoria:* ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB
-📡 *Conexión:* ${client && client.info ? 'Estable' : 'Verificando'}
-
-📈 *Actividad última hora:*
-• Mensajes procesados: ${messageCount}
-• Comandos ejecutados: ${stats.commandsExecuted}
-• Errores registrados: ${stats.errors}
-
-🕐 *Horario de servicio:* ${config.workingHours.start}:00 - ${config.workingHours.end}:00
-📱 *Grupo objetivo:* ${targetGroupId ? 'Conectado' : 'Buscando...'}
-
-${isWorkingTime() ? '🟢 En horario de servicio' : '🟡 Fuera de horario'}`;
-
-    await sendMessage(chat, healthText);
-}
-
-// =========================
-// HEARTBEAT Y MANTENIMIENTO
-// =========================
-
-// Heartbeat para Railway
-if (config.isRailway) {
-    setInterval(async () => {
-        try {
-            console.log('💓 Heartbeat - Manteniendo servicio activo');
-            const response = await fetch(`http://localhost:${config.port}/`);
-            const data = await response.json();
-            console.log(`📊 Estado: ${data.status}, Uptime: ${data.uptime}s`);
-        } catch (error) {
-            console.error('❌ Error en heartbeat:', error);
-        }
-    }, 25 * 60 * 1000); // Cada 25 minutos
-}
-
-// Limpieza de memoria periódica
-setInterval(() => {
-    if (global.gc) {
-        global.gc();
-        console.log('🧹 Limpieza de memoria ejecutada');
-    }
-}, 30 * 60 * 1000); // Cada 30 minutos
-
-// Backup de base de datos periódico
-setInterval(async () => {
-    try {
-        const backupData = { ...pedidosDB, timestamp: new Date().toISOString() };
-        const backupPath = path.join(__dirname, 'database', `backup-${Date.now()}.json`);
-        await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
-        console.log('💾 Backup de base de datos creado');
-        
-        // Mantener solo los últimos 5 backups
-        const backupDir = path.join(__dirname, 'database');
-        const files = await fs.readdir(backupDir);
-        const backups = files.filter(f => f.startsWith('backup-')).sort();
-        
-        if (backups.length > 5) {
-            for (const old of backups.slice(0, -5)) {
-                await fs.unlink(path.join(backupDir, old));
-            }
-        }
-    } catch (error) {
-        console.error('❌ Error creando backup:', error);
-    }
-}, 6 * 60 * 60 * 1000); // Cada 6 horas
-
-// =========================
-// INICIAR APLICACIÓN
-// =========================
-
-// Iniciar servidor web
-const server = app.listen(config.port, () => {
-    console.log('='.repeat(60));
-    console.log('🤖 BOT DAATCS - INICIANDO');
-    console.log('='.repeat(60));
-    console.log(`🌐 Servidor web: http://localhost:${config.port}`);
-    console.log(`📱 Código QR: http://localhost:${config.port}/qr`);
-    console.log(`📊 Estadísticas: http://localhost:${config.port}/stats`);
-    console.log(`💻 Entorno: ${config.isRailway ? 'Railway (Nube)' : 'Termux (Local)'}`);
-    console.log(`🔧 Límite mensajes/hora: ${config.maxMessages}`);
-    console.log(`🕐 Horario servicio: ${config.workingHours.start}:00 - ${config.workingHours.end}:00`);
-    console.log('='.repeat(60));
-});
-
-// Manejo de cierre graceful
-process.on('SIGINT', async () => {
-    console.log('\n🛑 Cerrando bot de manera segura...');
-    
-    try {
-        if (client) {
-            await saveDatabase();
-            await client.destroy();
-            console.log('✅ Cliente WhatsApp cerrado');
-        }
-        
-        if (server) {
-            server.close(() => {
-                console.log('✅ Servidor web cerrado');
-            });
-        }
-        
-        console.log('👋 Bot DAATCS finalizado correctamente');
-        process.exit(0);
-        
-    } catch (error) {
-        console.error('❌ Error cerrando aplicación:', error);
-        process.exit(1);
-    }
-});
-
-process.on('SIGTERM', async () => {
-    console.log('🔄 Señal SIGTERM recibida - Railway redeploy');
-    await saveDatabase();
-    process.exit(0);
-});
-
-// Manejo de errores no capturados
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Error no manejado en Promise:', reason);
-    stats.errors++;
-});
-
-process.on('uncaughtException', (error) => {
-    console.error('❌ Excepción no capturada:', error);
-    stats.errors++;
-});
-
-// Iniciar bot
-console.log('⚡ Iniciando Bot DAATCS...');
-initializeBot();
-
-// Exportar para testing (opcional)
-if (process.env.NODE_ENV === 'test') {
-    module.exports = { app, client, stats, pedidosDB };
-} message = '📋 *PEDIDOS ACTIVOS - DAATCS*\n\n';
+    let message = '📋 *PEDIDOS ACTIVOS - DAATCS*\n\n';
     
     activeOrders.slice(0, 10).forEach(order => {
         const emoji = getStatusEmoji(order.estado);
@@ -750,6 +559,71 @@ async function showOrderInfo(chat, orderId) {
     });
     
     await sendMessage(chat, message);
+}
+
+async function showStats(chat) {
+    const uptime = Math.floor((Date.now() - stats.startTime.getTime()) / 1000);
+    const hours = Math.floor(uptime / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    
+    const estadisticas = getEstadisticasEstados();
+    
+    let statsText = `📊 *ESTADÍSTICAS DAATCS*
+
+⏰ *Tiempo activo:* ${hours}h ${minutes}m
+📩 *Mensajes recibidos:* ${stats.messagesReceived}
+📤 *Mensajes enviados:* ${stats.messagesSent}
+🔧 *Comandos ejecutados:* ${stats.commandsExecuted}
+❌ *Errores:* ${stats.errors}
+🕐 *Última actividad:* ${formatDate(stats.lastActivity.toISOString())}
+
+📋 *PEDIDOS:*
+• Total: ${pedidosDB.pedidos.length}
+• Activos: ${pedidosDB.pedidos.filter(p => !['entregado', 'cancelado'].includes(p.estado)).length}
+• Entregados: ${estadisticas.entregado || 0}
+• Cancelados: ${estadisticas.cancelado || 0}
+
+📊 *POR ESTADO:*`;
+
+    Object.entries(estadisticas).forEach(([estado, cantidad]) => {
+        const emoji = getStatusEmoji(estado);
+        statsText += `\n• ${emoji} ${estado}: ${cantidad}`;
+    });
+
+    statsText += `\n\n💻 *Sistema:* ${config.isRailway ? 'Railway (Nube)' : 'Termux (Local)'}
+🔋 *Estado:* ${botStatus}
+📈 *Límite/hora:* ${messageCount}/${config.maxMessages}
+
+✅ Bot funcionando correctamente`;
+
+    await sendMessage(chat, statsText);
+}
+
+async function showBotHealth(chat) {
+    const uptime = Math.floor((Date.now() - stats.startTime.getTime()) / 1000);
+    const hours = Math.floor(uptime / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    
+    const healthText = `🏥 *ESTADO DE SALUD DEL BOT*
+
+✅ *Estado general:* ${botStatus}
+⏰ *Tiempo activo:* ${hours}h ${minutes}m
+💻 *Entorno:* ${config.isRailway ? 'Railway (Nube)' : 'Termux (Local)'}
+📊 *Rendimiento:* ${stats.errors === 0 ? 'Óptimo' : 'Con errores'}
+🔋 *Memoria:* ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB
+📡 *Conexión:* ${client && client.info ? 'Estable' : 'Verificando'}
+
+📈 *Actividad última hora:*
+• Mensajes procesados: ${messageCount}
+• Comandos ejecutados: ${stats.commandsExecuted}
+• Errores registrados: ${stats.errors}
+
+🕐 *Horario de servicio:* ${config.workingHours.start}:00 - ${config.workingHours.end}:00
+📱 *Grupo objetivo:* ${targetGroupId ? 'Conectado' : 'Buscando...'}
+
+${isWorkingTime() ? '🟢 En horario de servicio' : '🟡 Fuera de horario'}`;
+
+    await sendMessage(chat, healthText);
 }
 
 // =========================
@@ -929,10 +803,142 @@ async function sendHelpMessage(chat) {
     await sendMessage(chat, helpText);
 }
 
-async function showStats(chat) {
-    const uptime = Math.floor((Date.now() - stats.startTime.getTime()) / 1000);
-    const hours = Math.floor(uptime / 3600);
-    const minutes = Math.floor((uptime % 3600) / 60);
+// =========================
+// HEARTBEAT Y MANTENIMIENTO
+// =========================
+
+// Heartbeat para Railway
+if (config.isRailway) {
+    setInterval(async () => {
+        try {
+            console.log('💓 Heartbeat - Manteniendo servicio activo');
+            // Hacer una petición HTTP simple al servidor local
+            const http = require('http');
+            const options = {
+                hostname: 'localhost',
+                port: config.port,
+                path: '/',
+                method: 'GET'
+            };
+
+            const req = http.request(options, (res) => {
+                console.log(`📊 Heartbeat OK - Status: ${res.statusCode}`);
+            });
+
+            req.on('error', (err) => {
+                console.error('❌ Error en heartbeat:', err.message);
+            });
+
+            req.end();
+        } catch (error) {
+            console.error('❌ Error en heartbeat:', error);
+        }
+    }, 25 * 60 * 1000); // Cada 25 minutos
+}
+
+// Limpieza de memoria periódica
+setInterval(() => {
+    if (global.gc) {
+        global.gc();
+        console.log('🧹 Limpieza de memoria ejecutada');
+    }
+}, 30 * 60 * 1000); // Cada 30 minutos
+
+// Backup de base de datos periódico
+setInterval(async () => {
+    try {
+        const backupData = { ...pedidosDB, timestamp: new Date().toISOString() };
+        const backupDir = path.join(__dirname, 'database');
+        const backupPath = path.join(backupDir, `backup-${Date.now()}.json`);
+        
+        await fs.mkdir(backupDir, { recursive: true });
+        await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
+        console.log('💾 Backup de base de datos creado');
+        
+        // Mantener solo los últimos 5 backups
+        try {
+            const files = await fs.readdir(backupDir);
+            const backups = files.filter(f => f.startsWith('backup-')).sort();
+            
+            if (backups.length > 5) {
+                for (const old of backups.slice(0, -5)) {
+                    await fs.unlink(path.join(backupDir, old));
+                }
+            }
+        } catch (cleanupError) {
+            console.log('⚠️ Error limpiando backups antiguos:', cleanupError.message);
+        }
+    } catch (error) {
+        console.error('❌ Error creando backup:', error);
+    }
+}, 6 * 60 * 60 * 1000); // Cada 6 horas
+
+// =========================
+// INICIAR APLICACIÓN
+// =========================
+
+// Iniciar servidor web
+const server = app.listen(config.port, () => {
+    console.log('='.repeat(60));
+    console.log('🤖 BOT DAATCS - INICIANDO');
+    console.log('='.repeat(60));
+    console.log(`🌐 Servidor web: http://localhost:${config.port}`);
+    console.log(`📱 Código QR: http://localhost:${config.port}/qr`);
+    console.log(`📊 Estadísticas: http://localhost:${config.port}/stats`);
+    console.log(`💻 Entorno: ${config.isRailway ? 'Railway (Nube)' : 'Termux (Local)'}`);
+    console.log(`🔧 Límite mensajes/hora: ${config.maxMessages}`);
+    console.log(`🕐 Horario servicio: ${config.workingHours.start}:00 - ${config.workingHours.end}:00`);
+    console.log('='.repeat(60));
+});
+
+// Manejo de cierre graceful
+process.on('SIGINT', async () => {
+    console.log('\n🛑 Cerrando bot de manera segura...');
     
-    const estadisticas = getEstadisticasEstados();
-    let
+    try {
+        if (client) {
+            await saveDatabase();
+            await client.destroy();
+            console.log('✅ Cliente WhatsApp cerrado');
+        }
+        
+        if (server) {
+            server.close(() => {
+                console.log('✅ Servidor web cerrado');
+            });
+        }
+        
+        console.log('👋 Bot DAATCS finalizado correctamente');
+        process.exit(0);
+        
+    } catch (error) {
+        console.error('❌ Error cerrando aplicación:', error);
+        process.exit(1);
+    }
+});
+
+process.on('SIGTERM', async () => {
+    console.log('🔄 Señal SIGTERM recibida - Railway redeploy');
+    await saveDatabase();
+    process.exit(0);
+});
+
+// Manejo de errores no capturados
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Error no manejado en Promise:', reason);
+    stats.errors++;
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('❌ Excepción no capturada:', error);
+    stats.errors++;
+});
+
+// Iniciar bot
+console.log('⚡ Iniciando Bot DAATCS...');
+initializeBot();
+
+// Exportar para testing (opcional)
+if (process.env.NODE_ENV === 'test') {
+    module.exports = { app, client, stats, pedidosDB };
+}
