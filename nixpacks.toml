@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_18", "npm", "chromium"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["mkdir -p auth_data", "mkdir -p data"]
+
+[start]
+cmd = "node bot.js"

@@ -1,0 +1,194 @@
+# Bot DAATCS - Railway Edition 🚀
+
+Bot de WhatsApp optimizado para Railway con protecciones anti-baneo integradas.
+
+## 🌟 Características
+
+- ✅ **Optimizado para Railway** - Configuración específica para la nube
+- ✅ **Servidor Express integrado** - Health checks y endpoints útiles
+- ✅ **Protecciones anti-baneo** - Delays y límites inteligentes
+- ✅ **Heartbeat automático** - Evita que Railway suspenda el servicio
+- ✅ **Gestión de memoria optimizada** - Para contenedores limitados
+- ✅ **QR Code vía web** - Accesible desde el navegador
+- ✅ **Logs optimizados** - Para Railway Dashboard
+
+## 🚀 Desplegar en Railway
+
+### Método 1: Desde GitHub (Recomendado)
+
+1. **Fork este repositorio** en tu GitHub
+2. **Ve a [Railway.app](https://railway.app)** y conecta tu GitHub
+3. **Crea un nuevo proyecto** → "Deploy from GitHub repo"
+4. **Selecciona tu fork** del bot
+5. **Railway detectará automáticamente** la configuración
+6. **Espera el despliegue** (2-3 minutos)
+
+### Método 2: Railway CLI
+
+```bash
+# Instalar Railway CLI
+npm install -g @railway/cli
+
+# Login
+railway login
+
+# Inicializar proyecto
+railway init
+railway link
+
+# Desplegar
+railway up
+```
+
+### Método 3: Subida directa
+
+1. Sube todos los archivos a Railway
+2. Railway detectará el `package.json` automáticamente
+3. Se iniciará el build y despliegue
+
+## 📁 Estructura de archivos necesarios
+
+```
+bot-daatcs-railway/
+├── bot.js                 # Bot principal (optimizado para Railway)
+├── package.json           # Dependencias
+├── railway.toml           # Configuración Railway
+├── nixpacks.toml          # Build configuration
+├── Dockerfile             # Alternativo (opcional)
+└── README.md             # Esta guía
+```
+
+## 🔧 Configuración en Railway
+
+### Variables de entorno (automáticas):
+- `PORT` - Puerto del servidor (Railway lo asigna)
+- `RAILWAY_STATIC_URL` - URL pública del bot
+- `NODE_ENV=production` - Modo producción
+
+### URLs importantes:
+- **Bot status:** `https://tu-bot.railway.app/`
+- **Código QR:** `https://tu-bot.railway.app/qr`
+- **Estadísticas:** `https://tu-bot.railway.app/stats`
+
+## 📱 Configurar WhatsApp
+
+### 1. Obtener código QR:
+```bash
+# Opción 1: Ver logs en Railway Dashboard
+# Opción 2: Visitar https://tu-bot.railway.app/qr
+# Opción 3: Railway CLI
+railway logs
+```
+
+### 2. Escanear con WhatsApp Business:
+- Abre **WhatsApp Business** (no normal)
+- Ve a **Configuración** → **Dispositivos vinculados**
+- **Escanea** el código QR
+- Espera confirmación de conexión
+
+### 3. Crear grupo:
+- Crea un grupo llamado **"PEDIDOS DAATCS"**
+- Agrega los usuarios necesarios
+- El bot se conectará automáticamente
+
+## 🤖 Comandos del Bot
+
+Una vez conectado en tu grupo:
+
+### Comandos principales:
+- `/ayuda` - Ver todos los comandos
+- `/lista` - Pedidos activos
+- `/stats` - Estadísticas completas
+- `/estado [ID] [nuevo_estado]` - Cambiar estado pedido
+- `/salud` - Estado del bot
+- `/railway` - Info del servidor
+
+### Estados disponibles:
+- `pendiente`, `confirmado`, `proceso`, `diseño`
+- `produccion`, `control`, `listo`, `entregado`
+- `cancelado`, `pausado`
+
+## 🛡️ Protecciones Anti-Baneo
+
+### Configuración optimizada:
+- **Límite:** 15 mensajes/hora (reducido para Railway)
+- **Delays:** 3-7 segundos entre mensajes
+- **Horario:** 6:00 AM - 10:00 PM
+- **Heartbeat:** Cada 25 minutos
+- **Memoria:** Optimizada para contenedores
+
+## 📊 Monitoreo
+
+### Health Check:
+```bash
+curl https://tu-bot.railway.app/
+```
+
+### Ver estadísticas:
+```bash
+curl https://tu-bot.railway.app/stats
+```
+
+### Logs en tiempo real:
+```bash
+railway logs --follow
+```
+
+## 🔧 Solución de problemas
+
+### Bot no se conecta:
+1. Verifica los logs: `railway logs`
+2. Revisa el status: visita `https://tu-bot.railway.app/`
+3. Si es necesario, redeploy: `railway up --detach`
+
+### Error de memoria:
+Railway automáticamente reiniciará el bot si usa mucha memoria.
+
+### QR no aparece:
+1. Visita: `https://tu-bot.railway.app/qr`
+2. O verifica logs: `railway logs`
+3. El QR se regenera automáticamente
+
+### Grupo no encontrado:
+1. Asegúrate que el grupo se llame exactamente **"PEDIDOS DAATCS"**
+2. Usa **WhatsApp Business**, no WhatsApp normal
+3. Verifica logs para ver grupos disponibles
+
+## 💰 Costos de Railway
+
+- **Plan Hobby:** $5/mes - Perfecto para este bot
+- **Recursos incluidos:** Suficientes para WhatsApp Bot
+- **Sleep mode:** El bot tiene heartbeat para evitarlo
+
+## 🔄 Actualizar el bot
+
+### Desde GitHub:
+1. Haz push a tu repositorio
+2. Railway detectará cambios automáticamente
+3. Se redespliegará automáticamente
+
+### Desde CLI:
+```bash
+railway up
+```
+
+## 📞 Soporte
+
+Si tienes problemas:
+
+1. **Revisa los logs** en Railway Dashboard
+2. **Verifica el status** en `https://tu-bot.railway.app/`
+3. **Consulta la documentación** de Railway
+4. **Revisa que WhatsApp Business** esté funcionando
+
+## 🎯 Próximos pasos
+
+1. **Despliega** en Railway siguiendo esta guía
+2. **Escanea el QR** con WhatsApp Business  
+3. **Crea el grupo** "PEDIDOS DAATCS"
+4. **Prueba los comandos** (`/ayuda`, `/stats`)
+5. **¡Disfruta tu bot 24/7 en la nube!** ☁️
+
+---
+
+**¡Bot DAATCS listo para Railway! 🚀**
